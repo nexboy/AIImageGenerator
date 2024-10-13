@@ -1,0 +1,187 @@
+<html><head><base href="https://websim.creation.engine/ai-chatbot-image-generator/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Chatbot Image Generator</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .chat-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+  }
+  .chat-header {
+    background-color: #4a90e2;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+  }
+  .chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .message {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .user-message {
+    align-items: flex-end;
+  }
+  .bot-message {
+    align-items: flex-start;
+  }
+  .message-content {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .user-message .message-content {
+    background-color: #e3f2fd;
+  }
+  .bot-message .message-content {
+    background-color: #f0f0f0;
+  }
+  .message img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .chat-input {
+    display: flex;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  #user-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  #send-button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">AI Chatbot Image Generator</div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Type your message...">
+      <button id="send-button">Send</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <script>
+    const chatMessages = document.getElementById('chat-messages');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    let model;
+
+    // Load the MobileNet model
+    mobilenet.load().then(loadedModel => {
+      model = loadedModel;
+      console.log('MobileNet model loaded');
+    });
+
+    function addMessage(content, isUser = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', isUser ? 'user-message' : 'bot-message');
+      
+      const messageContent = document.createElement('div');
+      messageContent.classList.add('message-content');
+      messageContent.textContent = content;
+      
+      messageDiv.appendChild(messageContent);
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function generateImage(prompt) {
+      // This is a placeholder function. In a real implementation, you would call an image generation API.
+      // For this example, we'll use a random image from Picsum Photos as a stand-in.
+      const imageUrl = `https://picsum.photos/400/300?random=${Date.now()}`;
+      
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = `AI-generated image based on: ${prompt}`;
+      
+      const lastMessage = chatMessages.lastElementChild;
+      lastMessage.appendChild(img);
+
+      // Use MobileNet to classify the generated image
+      img.onload = async () => {
+        const predictions = await model.classify(img);
+        const topPrediction = predictions[0];
+        addMessage(`Based on my analysis, this image appears to be of ${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}% confident).`);
+      };
+    }
+
+    function botResponse(userMessage) {
+      // Simple bot logic
+      let response;
+      if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
+        response = "Hello! I'm an AI chatbot that can generate images. What kind of image would you like me to create?";
+      } else if (userMessage.toLowerCase().includes('how are you')) {
+        response = "I'm doing well, thank you! I'm excited to generate some images for you. What would you like to see?";
+      } else if (userMessage.toLowerCase().includes('bye') || userMessage.toLowerCase().includes('goodbye')) {
+        response = "Goodbye! It was nice chatting with you. Feel free to come back if you want more images generated!";
+      } else {
+        response = `I'd be happy to generate an image based on "${userMessage}". Here's what I came up with:`;
+        setTimeout(() => generateImage(userMessage), 1000);
+      }
+      return response;
+    }
+
+    function handleUserInput() {
+      const message = userInput.value.trim();
+      if (message) {
+        addMessage(message, true);
+        userInput.value = '';
+        
+        setTimeout(() => {
+          const response = botResponse(message);
+          addMessage(response);
+        }, 1000);
+      }
+    }
+
+    sendButton.addEventListener('click', handleUserInput);
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleUserInput();
+      }
+    });
+
+    // Initial bot message
+    addMessage("Hello! I'm an AI chatbot that can generate images. What kind of image would you like me to create?");
+  </script>
+</body>
+</html>
